@@ -175,8 +175,10 @@
 
 - (void)tokenForIdentity:(NSString *)identity
               completion:(void(^)(BOOL success, NSString *token))completion {
-#error - Use the access token generated in the Twilio SDK portal to populate the token variable and delete this line to build the Demo.  Alternately, implement an asynchronous fetch against your own token service here.
-    completion(TRUE, @"TOKEN_GOES_HERE");
+
+    NSString * Url = [NSString stringWithFormat:@"https://apricot-impala-3355.twil.io/chat-token?identity=%@", identity];
+    NSString * Token = [NSString stringWithContentsOfURL:[NSURL URLWithString:Url] encoding:NSUTF8StringEncoding error:nil];
+    completion(TRUE, Token);
 }
 
 - (void)storeIdentity:(NSString *)identity {

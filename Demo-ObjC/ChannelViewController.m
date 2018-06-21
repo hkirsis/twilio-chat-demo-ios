@@ -222,7 +222,7 @@ static const NSUInteger kMoreMessageCountToLoad = 50;
     
     
     
-    [actionsSheet addAction:[UIAlertAction actionWithTitle:@"Upload Text File"
+    [actionsSheet addAction:[UIAlertAction actionWithTitle:@"Generate and upload text file"
                                                      style:UIAlertActionStyleDefault
                                                    handler:^(UIAlertAction *action) {
                                                        // Lets create input field
@@ -235,12 +235,21 @@ static const NSUInteger kMoreMessageCountToLoad = 50;
                                                            textField.clearButtonMode = UITextFieldViewModeWhileEditing;
                                                            textField.borderStyle = UITextBorderStyleRoundedRect;
                                                        }];
-                                                       [alertController addAction:[UIAlertAction actionWithTitle:@"Generate" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+                                                       [alertController addAction:[UIAlertAction actionWithTitle:@"Stream from memory" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
                                                            NSArray * textfields = alertController.textFields;
                                                            UITextField * sizeField = textfields[0];
 
                                                            if ([sizeField.text intValue] > 0) {
-                                                               [weakSelf uploadFileOfSize:[sizeField.text intValue]];
+                                                               [weakSelf streamFromMemory:[sizeField.text intValue]];
+                                                           }
+                                                           
+                                                       }]];
+                                                       [alertController addAction:[UIAlertAction actionWithTitle:@"Stream from storage" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+                                                           NSArray * textfields = alertController.textFields;
+                                                           UITextField * sizeField = textfields[0];
+                                                           
+                                                           if ([sizeField.text intValue] > 0) {
+                                                               [weakSelf streamFromStorage:[sizeField.text intValue]];
                                                            }
                                                            
                                                        }]];
@@ -249,6 +258,7 @@ static const NSUInteger kMoreMessageCountToLoad = 50;
                                                        }]];
                                                        [self presentViewController:alertController animated:YES completion:nil];
                                                    }]];
+    
     [actionsSheet addAction:[UIAlertAction actionWithTitle:@"Upload Photo"
                                                      style:UIAlertActionStyleDefault
                                                    handler:^(UIAlertAction *action) {
@@ -585,7 +595,8 @@ estimatedHeightForRowAtIndexPath:(NSIndexPath *)indexPath {
 
 #pragma mark - Internal methods
 
-- (void)uploadFileOfSize: (int)Megabytes {
+
+- (void)streamFromMemory: (int)Megabytes {
     NSString * StringData = [@"" stringByPaddingToLength:Megabytes*1000000 withString: @"a" startingAtIndex:0];
     NSData* data = [StringData dataUsingEncoding:NSUTF8StringEncoding];
     NSInputStream *inputStream = [NSInputStream inputStreamWithData:data];
@@ -596,9 +607,41 @@ estimatedHeightForRowAtIndexPath:(NSIndexPath *)indexPath {
                     defaultFilename:@"Filename"
                           onStarted:^{
                           } onProgress:^(NSUInteger bytes) {
-                              [DemoHelpers displayToastWithMessage:[NSString stringWithFormat:@"Sent MB - %lu", bytes/1000000] inView:self.view];
+                              [DemoHelpers displayToastWithMessage:[NSString stringWithFormat:@"Sent MB from memory - %lu", bytes/1000000] inView:self.view];
                           } onCompleted:^(NSString * _Nonnull mediaSid) {
                               
+                          }];
+    [self.channel.messages sendMessageWithOptions:messageOptions
+                                       completion:^(TCHResult *result, TCHMessage *message) {
+                                           if (!result.isSuccessful) {
+                                               [DemoHelpers displayToastWithMessage:@"Failed to send message." inView:self.view];
+                                           }
+                                       }];
+}
+
+- (NSURL *)applicationDocumentsDirectory {
+    return [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory
+                                                   inDomains:NSUserDomainMask] lastObject];
+}
+
+- (void)streamFromStorage: (int)Megabytes {
+    NSString * StringData = [@"" stringByPaddingToLength:Megabytes*1000000 withString: @"a" startingAtIndex:0];
+    NSString *path = [[self applicationDocumentsDirectory].path
+                      stringByAppendingPathComponent:@"Filename.txt"];
+    [StringData writeToFile:path atomically:YES
+                   encoding:NSUTF8StringEncoding error:nil];
+
+    NSInputStream *inputStream = [NSInputStream inputStreamWithFileAtPath:path];
+    
+    TCHMessageOptions *messageOptions = [[TCHMessageOptions alloc] init];
+    [messageOptions withMediaStream:inputStream
+                        contentType:@"text/plain"
+                    defaultFilename:@"Filename"
+                          onStarted:^{
+                          } onProgress:^(NSUInteger bytes) {
+                              [DemoHelpers displayToastWithMessage:[NSString stringWithFormat:@"Sent MB from storage - %lu", bytes/1000000] inView:self.view];
+                          } onCompleted:^(NSString * _Nonnull mediaSid) {
+                              // Preferably delete the file afterwards
                           }];
     [self.channel.messages sendMessageWithOptions:messageOptions
                                        completion:^(TCHResult *result, TCHMessage *message) {

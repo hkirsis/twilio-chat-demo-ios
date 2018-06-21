@@ -597,6 +597,7 @@ estimatedHeightForRowAtIndexPath:(NSIndexPath *)indexPath {
 
 
 - (void)streamFromMemory: (int)Megabytes {
+    [DemoHelpers displayToastWithMessage:[NSString stringWithFormat:@"Generating media, please wait"] inView:self.view];
     NSString * StringData = [@"" stringByPaddingToLength:Megabytes*1000000 withString: @"a" startingAtIndex:0];
     NSData* data = [StringData dataUsingEncoding:NSUTF8StringEncoding];
     NSInputStream *inputStream = [NSInputStream inputStreamWithData:data];
@@ -607,9 +608,9 @@ estimatedHeightForRowAtIndexPath:(NSIndexPath *)indexPath {
                     defaultFilename:@"Filename"
                           onStarted:^{
                           } onProgress:^(NSUInteger bytes) {
-                              [DemoHelpers displayToastWithMessage:[NSString stringWithFormat:@"Sent MB from memory - %lu", bytes/1000000] inView:self.view];
+                              [DemoHelpers displayToastWithMessage:[NSString stringWithFormat:@"Sent MB from memory - %u", bytes/1000000] inView:self.view];
                           } onCompleted:^(NSString * _Nonnull mediaSid) {
-                              
+                              [DemoHelpers displayToastWithMessage:[NSString stringWithFormat:@"Media sent"] inView:self.view];
                           }];
     [self.channel.messages sendMessageWithOptions:messageOptions
                                        completion:^(TCHResult *result, TCHMessage *message) {
@@ -625,6 +626,7 @@ estimatedHeightForRowAtIndexPath:(NSIndexPath *)indexPath {
 }
 
 - (void)streamFromStorage: (int)Megabytes {
+    [DemoHelpers displayToastWithMessage:[NSString stringWithFormat:@"Generating media, please wait"] inView:self.view];
     NSString * StringData = [@"" stringByPaddingToLength:Megabytes*1000000 withString: @"a" startingAtIndex:0];
     NSString *path = [[self applicationDocumentsDirectory].path
                       stringByAppendingPathComponent:@"Filename.txt"];
@@ -639,8 +641,10 @@ estimatedHeightForRowAtIndexPath:(NSIndexPath *)indexPath {
                     defaultFilename:@"Filename"
                           onStarted:^{
                           } onProgress:^(NSUInteger bytes) {
-                              [DemoHelpers displayToastWithMessage:[NSString stringWithFormat:@"Sent MB from storage - %lu", bytes/1000000] inView:self.view];
+                              [DemoHelpers displayToastWithMessage:[NSString stringWithFormat:@"Sent MB from storage - %u", bytes/1000000] inView:self.view];
                           } onCompleted:^(NSString * _Nonnull mediaSid) {
+                              [DemoHelpers displayToastWithMessage:[NSString stringWithFormat:@"Media sent"] inView:self.view];
+                              
                               // Preferably delete the file afterwards
                           }];
     [self.channel.messages sendMessageWithOptions:messageOptions

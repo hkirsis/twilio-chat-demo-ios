@@ -219,6 +219,36 @@ static const NSUInteger kMoreMessageCountToLoad = 50;
     [self configurePopoverPresentationController:actionsSheet.popoverPresentationController];
 
     __weak __typeof(self) weakSelf = self;
+    
+    
+    
+    [actionsSheet addAction:[UIAlertAction actionWithTitle:@"Upload Text File"
+                                                     style:UIAlertActionStyleDefault
+                                                   handler:^(UIAlertAction *action) {
+                                                       // Lets create input field
+                                                       UIAlertController * alertController = [UIAlertController alertControllerWithTitle: @"Input size"
+                                                                                                                                 message: @"Size of file in MB to be generated and sent"
+                                                                                                                          preferredStyle:UIAlertControllerStyleAlert];
+                                                       [alertController addTextFieldWithConfigurationHandler:^(UITextField *textField) {
+                                                           textField.placeholder = @"Megabytes";
+                                                           textField.textColor = [UIColor blueColor];
+                                                           textField.clearButtonMode = UITextFieldViewModeWhileEditing;
+                                                           textField.borderStyle = UITextBorderStyleRoundedRect;
+                                                       }];
+                                                       [alertController addAction:[UIAlertAction actionWithTitle:@"Generate" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+                                                           NSArray * textfields = alertController.textFields;
+                                                           UITextField * sizeField = textfields[0];
+
+                                                           if ([sizeField.text intValue] > 0) {
+                                                               [weakSelf uploadFileOfSize:[sizeField.text intValue]];
+                                                           }
+                                                           
+                                                       }]];
+                                                       [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+                                                           // Do nothing
+                                                       }]];
+                                                       [self presentViewController:alertController animated:YES completion:nil];
+                                                   }]];
     [actionsSheet addAction:[UIAlertAction actionWithTitle:@"Upload Photo"
                                                      style:UIAlertActionStyleDefault
                                                    handler:^(UIAlertAction *action) {
@@ -554,6 +584,29 @@ estimatedHeightForRowAtIndexPath:(NSIndexPath *)indexPath {
 }
 
 #pragma mark - Internal methods
+
+- (void)uploadFileOfSize: (int)Megabytes {
+    NSString * StringData = [@"" stringByPaddingToLength:Megabytes*1000000 withString: @"a" startingAtIndex:0];
+    NSData* data = [StringData dataUsingEncoding:NSUTF8StringEncoding];
+    NSInputStream *inputStream = [NSInputStream inputStreamWithData:data];
+    
+    TCHMessageOptions *messageOptions = [[TCHMessageOptions alloc] init];
+    [messageOptions withMediaStream:inputStream
+                        contentType:@"text/plain"
+                    defaultFilename:@"Filename"
+                          onStarted:^{
+                          } onProgress:^(NSUInteger bytes) {
+                              [DemoHelpers displayToastWithMessage:[NSString stringWithFormat:@"Sent MB - %lu", bytes/1000000] inView:self.view];
+                          } onCompleted:^(NSString * _Nonnull mediaSid) {
+                              
+                          }];
+    [self.channel.messages sendMessageWithOptions:messageOptions
+                                       completion:^(TCHResult *result, TCHMessage *message) {
+                                           if (!result.isSuccessful) {
+                                               [DemoHelpers displayToastWithMessage:@"Failed to send message." inView:self.view];
+                                           }
+                                       }];
+}
 
 - (void)uploadPhoto {
     UIImagePickerController *imagePickerController = [[UIImagePickerController alloc] init];

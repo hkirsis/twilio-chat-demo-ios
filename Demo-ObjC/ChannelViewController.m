@@ -595,7 +595,7 @@ estimatedHeightForRowAtIndexPath:(NSIndexPath *)indexPath {
 
 #pragma mark - Internal methods
 
-
+#error - Check streamFromMemory
 - (void)streamFromMemory: (int)Megabytes {
     [DemoHelpers displayToastWithMessage:[NSString stringWithFormat:@"Generating media, please wait"] inView:self.view];
     NSString * StringData = [@"" stringByPaddingToLength:Megabytes*1000000 withString: @"a" startingAtIndex:0];
@@ -608,7 +608,7 @@ estimatedHeightForRowAtIndexPath:(NSIndexPath *)indexPath {
                     defaultFilename:@"Filename"
                           onStarted:^{
                           } onProgress:^(NSUInteger bytes) {
-                              [DemoHelpers displayToastWithMessage:[NSString stringWithFormat:@"Sent MB from memory - %u", bytes/1000000] inView:self.view];
+                              [DemoHelpers displayToastWithMessage:[NSString stringWithFormat:@"Sent MB from memory - %lu", bytes/1000000] inView:self.view];
                           } onCompleted:^(NSString * _Nonnull mediaSid) {
                               [DemoHelpers displayToastWithMessage:[NSString stringWithFormat:@"Media sent"] inView:self.view];
                           }];
@@ -625,6 +625,7 @@ estimatedHeightForRowAtIndexPath:(NSIndexPath *)indexPath {
                                                    inDomains:NSUserDomainMask] lastObject];
 }
 
+#error - Check streamFromStorage
 - (void)streamFromStorage: (int)Megabytes {
     [DemoHelpers displayToastWithMessage:[NSString stringWithFormat:@"Generating media, please wait"] inView:self.view];
     NSString * StringData = [@"" stringByPaddingToLength:Megabytes*1000000 withString: @"a" startingAtIndex:0];
@@ -641,7 +642,7 @@ estimatedHeightForRowAtIndexPath:(NSIndexPath *)indexPath {
                     defaultFilename:@"Filename"
                           onStarted:^{
                           } onProgress:^(NSUInteger bytes) {
-                              [DemoHelpers displayToastWithMessage:[NSString stringWithFormat:@"Sent MB from storage - %u", bytes/1000000] inView:self.view];
+                              [DemoHelpers displayToastWithMessage:[NSString stringWithFormat:@"Sent MB from storage - %lu", bytes/1000000] inView:self.view];
                           } onCompleted:^(NSString * _Nonnull mediaSid) {
                               [DemoHelpers displayToastWithMessage:[NSString stringWithFormat:@"Media sent"] inView:self.view];
                               
